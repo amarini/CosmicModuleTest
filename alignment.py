@@ -7,7 +7,7 @@ from cosmics.geometry import *
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv("run1.csv")
+df = pd.read_csv("processed/run4.csv")
 #df = pd.read_csv("run2.csv")
 
 ### the actual geometry is implemented here

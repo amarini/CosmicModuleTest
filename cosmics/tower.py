@@ -10,6 +10,7 @@ m0.setup()
 
 m1 = Module()
 m1.x = np.array([65.,0.,0.])
+#m1.x += np.array([0,0,0.851351])
 #m1.x += np.array([0.,5.03,-5.1]) ## alignment
 #m1.x += np.array([0.,2.365885,-2.926829])
 
