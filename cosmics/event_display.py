@@ -70,7 +70,7 @@ if __name__ == "__main__": ## TEST
         tower.draw(d)
 
         if True:
-            run2 = pd.read_csv("run2.csv") ## 340 min
+            run2 = pd.read_csv("processed/run2.csv") ## 340 min
             tracks = [] 
             for i in range(0, len(run2)):
                 t = Track()
