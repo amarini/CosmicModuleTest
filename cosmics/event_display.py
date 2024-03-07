@@ -70,29 +70,46 @@ if __name__ == "__main__": ## TEST
         tower.draw(d)
 
         if True:
-            run2 = pd.read_csv("processed/run2.csv") ## 340 min
+            run = pd.read_csv("processed/run4.csv") ## 340 min
+
             tracks = [] 
-            for i in range(0, len(run2)):
+            for i in range(0, len(run)):
                 t = Track()
-                if run2.iloc[i]["hyb2"] != 1: continue
+                if run.iloc[i]["hyb2"] != 0: continue
                     ## hyb, z, chip ,strip
                 t.setup(m0.get(
-                    run2.iloc[i]["hyb1"],run2.iloc[i]["z1"], run2.iloc[i]['chip1'],run2.iloc[i]['strip1']
+                    run.iloc[i]["hyb1"],run.iloc[i]["z1"], run.iloc[i]['chip1'],run.iloc[i]['strip1']
                 ),m1.get(
-                    run2.iloc[i]["hyb2"],run2.iloc[i]["z2"], run2.iloc[i]['chip2'],run2.iloc[i]['strip2']
+                    run.iloc[i]["hyb2"],run.iloc[i]["z2"], run.iloc[i]['chip2'],run.iloc[i]['strip2']
                 ))
 
                 m0.get(
-                    run2.iloc[i]["hyb1"],run2.iloc[i]["z1"], run2.iloc[i]['chip1'],run2.iloc[i]['strip1']
+                    run.iloc[i]["hyb1"],run.iloc[i]["z1"], run.iloc[i]['chip1'],run.iloc[i]['strip1']
                 ).active = True
                 m1.get(
-                    run2.iloc[i]["hyb2"],run2.iloc[i]["z2"], run2.iloc[i]['chip2'],run2.iloc[i]['strip2']
+                    run.iloc[i]["hyb2"],run.iloc[i]["z2"], run.iloc[i]['chip2'],run.iloc[i]['strip2']
                 ).active = True
 
                 tracks.append(t)
 
             tower.draw(d)
             [    t.draw(d) for t in tracks]
+            ## Get Hyb0
+            m0.get(0)._draw_chip(0,d)
+            d['fc']= 'blueviolet'
+            m0.get(0)._draw_chip(1,d)
+            d['fc']= 'gold'
+            m0.get(0)._draw_chip(2,d)
+            d['fc']= 'blueviolet'
+            m0.get(0)._draw_chip(3,d)
+            d['fc']= 'gold'
+            m0.get(0)._draw_chip(4,d)
+            d['fc']= 'blueviolet'
+            m0.get(0)._draw_chip(5,d)
+            d['fc']= 'gold'
+            m0.get(0)._draw_chip(6,d)
+            d['fc']= 'blueviolet'
+            m0.get(0)._draw_chip(7,d)
 
         plt.show()
 

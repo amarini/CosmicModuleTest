@@ -121,7 +121,11 @@ class Hybrid (Base):
                 for strip in range(0,Hybrid.nstrip): 
                     a = Strip()
                     xpos = 0
-                    iy =  ( chip*Hybrid.nstrip + strip )
+                    iy =  ( chip*Hybrid.nstrip + strip ) ## standard 
+                    ## Chip best permutation (7, 4, 3, 1, 6, 5, 2, 0) 
+                    #iy = ( (chip)*Hybrid.nstrip + (Hybrid.nstrip -strip -1)) ## revert strip
+                    #ChipBest = [7, 4, 3, 1, 6, 5, 2, 0 ] #?!?
+                    #iy = ChipBest[chip] *Hybrid.nstrip + (Hybrid.nstrip -strip -1)
                     iz = z
 
                     if self.hyb: 
@@ -213,6 +217,40 @@ class Hybrid (Base):
 
     def _draw_ogl(self,d):
         pass
+
+    def _draw_chip(self,chip,d): ## debug
+        ''' Only for Hyb 0. Draw a square, not a cube'''
+        from mpl_toolkits import mplot3d
+        
+
+        iy0 =  chip*Hybrid.nstrip 
+        iy1 =  (chip +1)*(Hybrid.nstrip) 
+
+        ypos0 = Hybrid.dy / (Hybrid.nstrip*Hybrid.nchip) * iy0
+        ypos1 = Hybrid.dy / (Hybrid.nstrip*Hybrid.nchip) * iy1
+
+        zpos0 = 0.
+        zpos1 = Hybrid.dz 
+
+        xpos = Hybrid.dx ## anypoint
+    
+        ## Rotate and translate
+        R = Rotation.from_euler('xyz',self.theta)
+
+        face = [ [xpos,ypos0,zpos0], 
+                 [65,ypos0,zpos1],
+                 [65,ypos1,zpos1],
+                 [xpos,ypos1,zpos0],
+                ]
+
+        faces = [[ self.x + R.apply(f) for f in face]]
+        print ("Drawing faces",faces)
+
+        fc = 'gold'  if 'fc' not in d else d['fc']
+        collection = mplot3d.art3d.Poly3DCollection(faces, linewidths=0.2, alpha=0.2,edgecolors='k', facecolors=fc)
+        ax = d['ax']
+        ax.add_collection3d(collection)
+        return self
 
 class Module (Base):
     todraw=False ## Not impl
