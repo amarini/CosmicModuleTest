@@ -122,10 +122,10 @@ class Hybrid (Base):
                     a = Strip()
                     xpos = 0
                     iy =  ( chip*Hybrid.nstrip + strip ) ## standard 
-                    ## Chip best permutation (7, 4, 3, 1, 6, 5, 2, 0) 
-                    #iy = ( (chip)*Hybrid.nstrip + (Hybrid.nstrip -strip -1)) ## revert strip
-                    #ChipBest = [7, 4, 3, 1, 6, 5, 2, 0 ] #?!?
-                    #iy = ChipBest[chip] *Hybrid.nstrip + (Hybrid.nstrip -strip -1)
+                
+                    ChipBest = [5, 4, 3, 2, 6, 7, 0, 1]
+                    iy = ChipBest[chip] *Hybrid.nstrip + strip
+
                     iz = z
 
                     if self.hyb: 
@@ -137,6 +137,11 @@ class Hybrid (Base):
                         iy=  (ichi*Hybrid.nstrip + istr) ## count back strip, chip rotade
                         #iy=  (chip*Hybrid.nstrip + istr) ## count back strip but not chip
                         #iy = (Hybrid.nstrip*Hybrid.nchip)  - iy ## go back
+
+                        ChipBest = [6,7,0,1,5,4,3,2] ## cycling ChipBest
+                        iy = ChipBest[chip] *Hybrid.nstrip + istr
+
+
                         ## Revert iy
                         #iy =  ( chip*Hybrid.nstrip + strip )
                     ypos = Hybrid.dy / (Hybrid.nstrip*Hybrid.nchip) * iy

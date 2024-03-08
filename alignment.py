@@ -46,7 +46,7 @@ print (df[ df["hyb1"] != df["hyb2"] ] ["dy"].describe())
 from itertools import permutations
 import math
 
-def  CheckPermutations(doChip=True, doStrip=False):
+def  CheckPermutations(df, doChip=True, doStrip=False):
 
     if doChip and doStrip:
         print("Too many permutations?")
@@ -64,7 +64,7 @@ def  CheckPermutations(doChip=True, doStrip=False):
     
     ## Check 4 x 4
     #ChipPermutations = [ range(0,Hybrid.nchip)  , [ Hybrid.nchip -chip -1 for chip in range(0,Hybrid.nchip) ] ]
-    #StripPermutations = [ range(0,Hybrid.nstrip), [ Hybrid.nstrip -strip -1 for strip in range(0,Hybrid.nstrip)] ]
+    StripPermutations = [ range(0,Hybrid.nstrip), [ Hybrid.nstrip -strip -1 for strip in range(0,Hybrid.nstrip)] ]
 
     Smin= 1e9
     ChipBest = None
@@ -84,7 +84,10 @@ def  CheckPermutations(doChip=True, doStrip=False):
 
             iy1 = df["chip1"].map( { i:ChipShuffle[i] for i in range(0,Hybrid.nchip)} ) * Hybrid.nstrip + df["strip1"].map({ i:StripShuffle[i] for i in range(0,Hybrid.nstrip)})
             iy2 = df["chip2"].map( { i:ChipShuffle[i] for i in range(0,Hybrid.nchip)} ) * Hybrid.nstrip + df["strip2"].map({ i:StripShuffle[i] for i in range(0,Hybrid.nstrip)})
-            S = np.sum(  (iy1.to_numpy() - iy2.to_numpy())**2 )
+
+            deltaChip = (iy1-iy2).apply(abs).to_numpy()
+            deltaChip = np.maximum( deltaChip - 240,0.) ### close by
+            S = np.sum(  (deltaChip)**2 )
 
             #print("Current permutation is (",S,")",ChipShuffle if doChip else "--",StripShuffle if doStrip else '--')
             if S < Smin:
@@ -96,6 +99,37 @@ def  CheckPermutations(doChip=True, doStrip=False):
     print("----------------")
     print("Best permutation is",ChipBest,StripBest)
 
-
-CheckPermutations(doChip=True, doStrip=False)
+## too sensible, I need to try multiple possibilities
+## CheckPermutations( df[ df['hyb1'] == df ['hyb2']] ,doChip=True, doStrip=False)
 #CheckPermutations(doChip=False, doStrip=True)
+
+
+def CheckCloseByChip(df):
+    ChipPermutations = permutations(range(0,Hybrid.nchip)) 
+    Smin=1.e9
+    for ChipShuffle in ChipPermutations:
+        deltaChip = (df['chip1'].map({ i:ChipShuffle[i] for i in range(0,Hybrid.nchip)} ) - df['chip2'].map({ i:ChipShuffle[i] for i in range(0,Hybrid.nchip)} )).to_numpy()
+        deltaChip = np.maximum( np.abs(deltaChip)-1,0.)
+        #print ("Delta Chip2",deltaChip)
+        S = np.sum(deltaChip**2)
+        if S <= Smin:
+            Smin=S
+            print("Better permutation (",S,")",ChipShuffle)
+
+CheckCloseByChip(  df[ df['hyb1'] == df ['hyb2']]   )
+
+
+def CheckCloseByChipDifferentHyb(df,Shuffle0= [5, 4, 3, 2, 6, 7, 0, 1]):
+    print("closeby")
+    ChipPermutations = permutations(range(0,Hybrid.nchip)) 
+    Smin=1.e9
+    for ChipShuffle in ChipPermutations:
+        deltaChip = (df['chip1'].map({ i:Shuffle0[i] for i in range(0,Hybrid.nchip)} ) - df['chip2'].map({ i:ChipShuffle[i] for i in range(0,Hybrid.nchip)} )).to_numpy()
+        deltaChip = np.maximum( np.abs(deltaChip)-1,0.)
+        #print ("Delta Chip2",deltaChip)
+        S = np.sum(deltaChip**2)
+        if S <= Smin:
+            Smin=S
+            print("Better permutation (",S,")",ChipShuffle)
+
+CheckCloseByChipDifferentHyb(  df[ df['hyb1'] != df ['hyb2']]   )
