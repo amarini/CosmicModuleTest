@@ -17,6 +17,6 @@ m1.x = np.array([65.,0.,0.])
 
 m1.setup()
 
-tower = Tower()
+tower = Tower('simple')
 tower.add("m0",m0)
 tower.add("m1",m1)

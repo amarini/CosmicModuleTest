@@ -1,12 +1,17 @@
 from argparse import ArgumentParser
 parser=ArgumentParser()
 parser.add_argument("-f","--file",help="input file",default="cosmics1.txt")
-parser.add_argument("-o","--out",help="output file",default="run1.csv")
-parser.add_argument("--ignore_first",help="ignore first read (default)",default=True,action='store_true')
+parser.add_argument("-o","--out",help="output file",default="processed/run1.csv")
+### For ignoring the first read
+parser.add_argument("--ignore_first",help="ignore first read (default)",default=False,action='store_true')
 parser.add_argument("--do_first",help="do first read",dest='ignore_first',action='store_false')
+###
 args = parser.parse_args()
 #args.ignore_first=True
 
+from datetime import datetime
+import re
+import json
 
 def time_match(events, fout, verbose=False, window=1):
     if verbose: 
@@ -45,8 +50,6 @@ def time_match(events, fout, verbose=False, window=1):
                     [l1, h1, bx1, chip1, strip1 ,bend1 ,z1,l2, h2, bx2, chip2, strip2 ,bend2 ,z2]
                     ]) + '\n'
                 )
-            
-
 
 if __name__=="__main__":
     fin = open(args.file,"r")
@@ -55,11 +58,22 @@ if __name__=="__main__":
                 ','.join([ 
                     "link1", "hyb1", "bx1", "chip1", "strip1" ,"bend1" ,"z1","link2", "hyb2", "bx2", "chip2", "strip2" ,"bend2" ,"z2"]) + '\n'
                 )
+
+    meta = {} ### metadata start storing metadata
+
     lastread = 0
     events = []
 
     for line in fin:
-        if line.startswith('#'): continue
+        if line.startswith('#'): 
+            ## does the line contain a date?    
+            try:
+                meta['date'] = str( datetime.fromisoformat( re.sub('\n','',re.sub('^#*\ ','',line)) ) ) # str(datetime) is equivalent to toisoformat
+                print("> the starting of datataking was", meta['date'] )
+            except:
+                pass
+
+            continue
         iread = int(line.split()[0])
         link = int(line.split()[1])
         hyb = int(line.split()[2])
@@ -73,8 +87,8 @@ if __name__=="__main__":
         
         ## do something
         if lastread != iread: 
-            print("Processing",lastread)
-            time_match(events,fout, verbose = (lastread == 168) )
+            #print("Processing",lastread)
+            time_match(events,fout )
             events= []
             lastread=iread
 
@@ -85,8 +99,80 @@ if __name__=="__main__":
 
         events.append( (link, hyb, bx, chip, strip ,bend ,z ))
     #flush
-    print("Processing",lastread)
+    #print("Processing",lastread)
     time_match(events,fout)
     events=[]
     fin.close()
     fout.close()
+    
+    meta['runtime'] = lastread ## time in minutes
+    print(" Adding additional information to the run")
+
+    ### second part after matching. Add information
+    #### Add things -> TODO add to processing
+    import pandas as pd 
+    import numpy as np
+    import math
+    ## geometry
+    from cosmics.geometry import *
+
+    ## actual setup
+    from cosmics.tower import tower
+    m0 = tower.get('m0')
+    m1 = tower.get('m1')
+
+    meta['setup'] = tower.get_name()
+
+    ## read the closed output file in pandas
+    run = pd.read_csv(args.out)
+    
+    ## start adding information
+    to_add = {"impact1-x":[],"impact1-y":[],"impact1-z":[],
+              "impact2-x":[],"impact2-y":[],"impact2-z":[],
+              "theta":[],
+              "bend":[],
+             }
+    ## this is potentially slow. can we vectorize it
+    for i in range(0, len(run)):
+        s0 = m0.get(run.iloc[i]["hyb1"],run.iloc[i]["z1"], run.iloc[i]['chip1'],run.iloc[i]['strip1'])
+        s1 = m1.get(run.iloc[i]["hyb2"],run.iloc[i]["z2"], run.iloc[i]['chip2'],run.iloc[i]['strip2'])
+
+        p0 = (s0.start + s0.stop)/2.
+        p1 = (s1.start + s1.stop)/2.
+
+        to_add["impact1-x"].append(p0[0])
+        to_add["impact1-y"].append(p0[1])
+        to_add["impact1-z"].append(p0[2])
+
+        to_add["impact2-x"].append(p1[0])
+        to_add["impact2-y"].append(p1[1])
+        to_add["impact2-z"].append(p1[2])
+
+        to_add["theta"].append(   math.atan( math.sqrt(  (p0[1]-p1[1])**2 + (p0[2]-p1[2])**2) / abs(p0[0]-p1[0])  ) )
+        to_add["bend"] .append(   math.atan(  (p0[1]-p1[1]) / abs(p0[0]-p1[0])  ))
+
+
+    for col in to_add.keys():
+        run[col] = np.array(to_add[col])
+    
+    meta['LUT-bend'] = 'fine-03'
+    for i in range(1,3):
+        run['bdec%d'%i] = run['bend%d'%i].map({
+            0b000:0,
+            0b001:1,
+            0b010:2,
+            0b011:3,
+            0b101:-1,
+            0b110:-2,
+            0b100:-3,
+            0b111:10,
+            })
+    
+    print(" Writing updated csv file")
+    run.to_csv(args.out)
+    ## write metadata
+    json_file_name = re.sub('csv','json',args.out)
+    if json_file_name == args.out: json_file_name = args.out + '.json'
+    with open(json_file_name,'w') as jout:
+        json.dump( meta, jout)
+    print ("-> Finished")

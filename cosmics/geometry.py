@@ -307,9 +307,10 @@ class Module (Base):
         return self.components[hyb] .get(z,chip,strip,)
 
 class Tower(Base):
-    def __init__(self):
+    def __init__(self,name=''):
         super().__init__()
         self.components={}
+        self.name=name
 
     def setup(self):
         pass
@@ -321,6 +322,9 @@ class Tower(Base):
         self.components[name] = m
     def get(self, name):
         return self.components[name]
+
+    def get_name(self):
+        return self.name
 
 #### Make a class. 
 class Track(Base):
