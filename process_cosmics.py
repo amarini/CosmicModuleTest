@@ -5,6 +5,9 @@ parser.add_argument("-o","--out",help="output file",default="processed/run1.csv"
 ### For ignoring the first read
 parser.add_argument("--ignore_first",help="ignore first read (default)",default=False,action='store_true')
 parser.add_argument("--do_first",help="do first read",dest='ignore_first',action='store_false')
+### 
+parser.add_argument("--run_offset_scan",help="run offset scan",default=True,action='store_true')
+parser.add_argument("--no_offset_scan",help="run offset scan",dest='run_offset_scan',default=False,action='store_false')
 ###
 args = parser.parse_args()
 #args.ignore_first=True
@@ -12,8 +15,10 @@ args = parser.parse_args()
 from datetime import datetime
 import re
 import json
+import numpy as np
 
-def time_match(events, fout, verbose=False, window=1):
+def time_match(events, fout, verbose=False, window=1, offset = 0):
+    matched= 0
     if verbose: 
         print("Processing events", len(events))
     closest=[]
@@ -33,6 +38,7 @@ def time_match(events, fout, verbose=False, window=1):
         print("---")
 
     for ie, (l1, h1, bx1, chip1, strip1 ,bend1 ,z1) in enumerate(events):
+        if l1 != 0: continue ## make sure first link is 0
         if verbose: print("matching event",ie) 
         if closest[ie] <0 : continue ## no match
         if verbose: print(" > has a closest") 
@@ -40,16 +46,19 @@ def time_match(events, fout, verbose=False, window=1):
         if closest[je] != ie: continue ## that guy has another better candidate
         if verbose: print(" > the other agrees") 
         l2, h2, bx2, chip2, strip2 ,bend2 ,z2 = events[je]
-        if abs(bx1-bx2)> window : continue
+        if abs(bx1-bx2-offset) > window : continue
         if verbose: print(" > bx is within window") 
         
         closest[je] = -1 ## avoid duplicate processing
+        matched +=1 
+        if fout != None:
+            fout.write(
+                    ','.join( [ str(x) for x in
+                        [l1, h1, bx1, chip1, strip1 ,bend1 ,z1,l2, h2, bx2, chip2, strip2 ,bend2 ,z2]
+                        ]) + '\n'
+                    )
+    return matched
 
-        fout.write(
-                ','.join( [ str(x) for x in
-                    [l1, h1, bx1, chip1, strip1 ,bend1 ,z1,l2, h2, bx2, chip2, strip2 ,bend2 ,z2]
-                    ]) + '\n'
-                )
 
 if __name__=="__main__":
     fin = open(args.file,"r")
@@ -63,6 +72,8 @@ if __name__=="__main__":
 
     lastread = 0
     events = []
+
+    offset_counts={ k:0 for k in range(-10,11)}
 
     for line in fin:
         if line.startswith('#'): 
@@ -88,6 +99,10 @@ if __name__=="__main__":
         ## do something
         if lastread != iread: 
             #print("Processing",lastread)
+            if args.run_offset_scan:
+                for k in offset_counts.keys():
+                    offset_counts[k] += time_match(events,None,offset = k, window=0  )
+
             time_match(events,fout )
             events= []
             lastread=iread
@@ -100,6 +115,13 @@ if __name__=="__main__":
         events.append( (link, hyb, bx, chip, strip ,bend ,z ))
     #flush
     #print("Processing",lastread)
+    if args.run_offset_scan:
+        print("Offset counts:")
+        for k in offset_counts.keys():
+            offset_counts[k] += time_match(events,None,offset = k, window=0  )
+            print("* ",k, offset_counts[k])
+        meta['offset'] = offset_counts[k]
+        
     time_match(events,fout)
     events=[]
     fin.close()
@@ -111,7 +133,6 @@ if __name__=="__main__":
     ### second part after matching. Add information
     #### Add things -> TODO add to processing
     import pandas as pd 
-    import numpy as np
     import math
     ## geometry
     from cosmics.geometry import *
