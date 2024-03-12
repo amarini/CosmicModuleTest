@@ -124,6 +124,7 @@ class Hybrid (Base):
                     iy =  ( chip*Hybrid.nstrip + strip ) ## standard 
                 
                     ChipBest = [5, 4, 3, 2, 6, 7, 0, 1]
+                    # [5, 4, 3, 2, 1, 0, 7, 6]
                     iy = ChipBest[chip] *Hybrid.nstrip + strip
 
                     iz = z

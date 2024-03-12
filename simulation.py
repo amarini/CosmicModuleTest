@@ -50,12 +50,12 @@ def sample():
 
 
 def gen_one(S=Hybrid.dz*Hybrid.dy/100.):
-    global Int
+    global Nint
     ### phi
     E, cost = sample()
     phi = np.random.uniform()* 2* np.pi
     ### do I want to keep track of the normalization?
-    dt =  np.random.exponential(1./ (Nint*S) )
+    dt =  np.random.exponential( 1./ (Nint*S) )
 
     return E, cost,phi, dt
 
