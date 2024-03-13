@@ -16,6 +16,7 @@ from datetime import datetime
 import re
 import json
 import numpy as np
+from subprocess import check_output
 
 def time_match(events, fout, verbose=False, window=1, offset = 0):
     matched= 0
@@ -69,6 +70,7 @@ if __name__=="__main__":
                 )
 
     meta = {} ### metadata start storing metadata
+    meta['process-hash'] = check_output('git rev-parse HEAD',shell=True)
 
     lastread = 0
     events = []
