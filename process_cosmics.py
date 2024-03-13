@@ -70,7 +70,7 @@ if __name__=="__main__":
                 )
 
     meta = {} ### metadata start storing metadata
-    meta['process-hash'] = check_output('git rev-parse HEAD',shell=True)
+    meta['process-hash'] = str( check_output('git rev-parse HEAD',shell=True)) .split()[0] ## remove endline
 
     lastread = 0
     events = []
@@ -194,6 +194,7 @@ if __name__=="__main__":
     print(" Writing updated csv file")
     run.to_csv(args.out)
     ## write metadata
+    #print("DEBUG,",meta)
     json_file_name = re.sub('csv','json',args.out)
     if json_file_name == args.out: json_file_name = args.out + '.json'
     with open(json_file_name,'w') as jout:
