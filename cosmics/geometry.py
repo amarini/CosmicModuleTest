@@ -134,13 +134,13 @@ class Hybrid (Base):
                         #iy = (Hybrid.nstrip*Hybrid.nchip)  - iy ## go back
                         iz = Hybrid.nz -z -1
                         istr = Hybrid.nstrip -strip -1
-                        ichi = (chip + Hybrid.nchip/2) % Hybrid.nchip
-                        iy=  (ichi*Hybrid.nstrip + istr) ## count back strip, chip rotade
+                        #ichi = (chip + Hybrid.nchip/2) % Hybrid.nchip
+                        #iy=  (ichi*Hybrid.nstrip + istr) ## count back strip, chip rotade
                         #iy=  (chip*Hybrid.nstrip + istr) ## count back strip but not chip
                         #iy = (Hybrid.nstrip*Hybrid.nchip)  - iy ## go back
 
-                        ChipBest = [6,7,0,1,5,4,3,2] ## cycling ChipBest
-                        iy = ChipBest[chip] *Hybrid.nstrip + istr
+                        #ChipBest = [6,7,0,1,5,4,3,2] ## cycling ChipBest
+                        iy = ChipBest[-chip] *Hybrid.nstrip + istr
 
 
                         ## Revert iy
